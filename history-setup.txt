@@ -1,0 +1,188 @@
+    1  ifconfig
+    2  sudo reboot
+    3  exit
+    4  ifconfig
+    5  git clone --recurse-submodules https://github.com/bellflight/AVR-2022 ~/AVR-2022
+    6  cd ~/AVR-2022/VMC/scripts
+    7  chmod +x setup.py
+    8  ./setup.py
+    9  exit
+   10  sudo reboot
+   11  sudo docker image ls
+   12  df -h
+   13  exit
+   14  cd VMC
+   15  ./scripts/setup.py 
+   16  lsusb
+   17  ./scripts/setup.py 
+   18  docker run --rm --mount ftype=bind,source=home/avr/AVR-2022/VMC/vio/settings,target=/usr/local/zed/settings/ --privileged docker.io/stereolabs/zed:3.7-py-runtime-l4t-r32.6 
+   19  sudo docker run --rm --mount ftype=bind,source=home/avr/AVR-2022/VMC/vio/settings,target=/usr/local/zed/settings/ --privileged docker.io/stereolabs/zed:3.7-py-runtime-l4t-r32.6 
+   20  sudo docker run --rm --mount type=bind,source=home/avr/AVR-2022/VMC/vio/settings,target=/usr/local/zed/settings/ --privileged docker.io/stereolabs/zed:3.7-py-runtime-l4t-r32.6 
+   21  sudo docker run --rm --mount type=bind,source=/home/avr/AVR-2022/VMC/vio/settings,target=/usr/local/zed/settings/ --privileged docker.io/stereolabs/zed:3.7-py-runtime-l4t-r32.6 
+   22  sudo docker run --rm --mount type=bind,source=/home/avr/AVR-2022/VMC/vio/settings,target=/usr/local/zed/settings/ --network host --privileged docker.io/stereolabs/zed:3.7-py-runtime-l4t-r32.6 
+   23  reboot
+   24  sudo reboot
+   25  3. **Update Docker**: Outdated versions of Docker might have bugs or incompatibilities with newer kernel versions. Ensure that you have the latest version of Docker installed:
+   26  2. **Docker Daemon Restart**: A simple restart of the Docker daemon can often resolve such transient issues:
+   27  4. **Ensure UFW Settings**: If you are using UFW (Uncomplicated Firewall) on your machine, there are instances where it might interfere with Docker. Try disabling UFW to see if that resolves the issue:
+   28  5. **Check Docker Configuration**: Check Docker's `daemon.json` configuration, typically found in `/etc/docker/daemon.json`. Sometimes, specific configurations (like custom `bip` settings for the Docker bridge) can cause issues. If you've made custom changes, try reverting them to see if it resolves the problem.
+   29  6. **Docker Bridge**: It's possible the default `docker0` bridge is in a problematic state. You can try resetting it:
+   30     - First, stop Docker: `sudo systemctl stop docker`
+   31     - Remove the `docker0` bridge: `sudo ip link delete docker0`
+   32     - Restart Docker: `sudo systemctl start docker`
+   33  7. **Docker Storage Driver**: Sometimes the storage driver Docker uses can be the cause of issues. By default, Docker might use `aufs` or `overlay2` depending on your setup. You can try switching between them to see if it resolves the issue. (Remember to backup any important data since changing the storage driver can require resetting Docker storage).
+   34  8. **Environment Specifics**: Since you're using a specific Docker image (`docker.io/stereolabs/zed:3.7-py-runtime-l4t-r32.6`), ensure that there aren't any known issues with the image and your environment. The image seems to be for NVIDIA's L4T (Linux for Tegra) platform. Ensure your host system is compatible and has the required NVIDIA drivers/modules.
+   35  The error you're seeing seems to stem from Docker's networking subsystem failing to create the necessary network endpoints. The root cause can vary, but here are a few steps you can take to troubleshoot and resolve the issue:
+   36  1. **Kernel Modules**: Docker uses certain kernel modules like `veth`, `bridge`, etc. for its operation. If some of these modules are not available or are in a conflicted state, you might face such issues. Reload the necessary kernel modules:
+   37  2. **Docker Daemon Restart**: A simple restart of the Docker daemon can often resolve such transient issues:
+   38  5. **Check Docker Configuration**: Check Docker's `daemon.json` configuration, typically found in `/etc/docker/daemon.json`. Sometimes, specific configurations (like custom `bip` settings for the Docker bridge) can cause issues. If you've made custom changes, try reverting them to see if it resolves the problem.
+   39  6. **Docker Bridge**: It's possible the default `docker0` bridge is in a problematic state. You can try resetting it:
+   40     - First, stop Docker: `sudo systemctl stop docker`
+   41     - Remove the `docker0` bridge: `sudo ip link delete docker0`
+   42     - Restart Docker: `sudo systemctl start docker`
+   43  7. **Docker Storage Driver**: Sometimes the storage driver Docker uses can be the cause of issues. By default, Docker might use `aufs` or `overlay2` depending on your setup. You can try switching between them to see if it resolves the issue. (Remember to backup any important data since changing the storage driver can require resetting Docker storage).
+   44  8. **Environment Specifics**: Since you're using a specific Docker image (`docker.io/stereolabs/zed:3.7-py-runtime-l4t-r32.6`), ensure that there aren't any known issues with the image and your environment. The image seems to be for NVIDIA's L4T (Linux for Tegra) platform. Ensure your host system is compatible and has the required NVIDIA drivers/modules.
+   45  astly, if none of these solutions help, consider reaching out to the maintainers of the Docker image or checking Docker forums or GitHub issues for more specific help related to the image or the specific operation you're trying to perform.
+   46  3. **Update Docker**: Outdated versions of Docker might have bugs or incompatibilities with newer kernel versions. Ensure that you have the latest version of Docker installed:
+   47  4. **Ensure UFW Settings**: If you are using UFW (Uncomplicated Firewall) on your machine, there are instances where it might interfere with Docker. Try disabling UFW to see if that resolves the issue:
+   48  ls
+   49  cd AVR-2022/
+   50  ifconfig
+   51  cd VMC/
+   52  ls
+   53  ./scripts/wifi.py connect
+   54  ipconfig
+   55  ifconfig
+   56  git status
+   57  git remote
+   58  git remote -v
+   59  git pull
+   60  ./scripts/setup.py 
+   61  ifconfig
+   62  ./scripts/setup.py 
+   63  sudo modprobe overlay
+   64  sudo modprobe br_netfilter
+   65  ./scripts/setup.py 
+   66  sudo systemctl restart docker
+   67  The error you're seeing seems to stem from Docker's networking subsystem failing to create the necessary network endpoints. The root cause can vary, but here are a few steps you can take to troubleshoot and resolve the issue:
+   68  1. **Kernel Modules**: Docker uses certain kernel modules like `veth`, `bridge`, etc. for its operation. If some of these modules are not available or are in a conflicted state, you might face such issues. Reload the necessary kernel modules:
+   69  cd VMC/
+   70  ./scripts/setup.py 
+   71  ipconfig
+   72  ifconfig
+   73  git status
+   74  git fetch
+   75  git status
+   76  git pull
+   77  cd VMC/
+   78  ./scripts/setup.py 
+   79  ifconfig
+   80  cd AVR-2022/VMC/
+   81  ls
+   82  ./start.py 
+   83  ./start.py -m
+   84  ./start.py -m run
+   85  sudo docker compose down
+   86  ls
+   87  sudo docker ps -a
+   88  sudo docker rm $(sudo docker ps -aq)
+   89  sudo stop  $(sudo docker ps -aq)
+   90  sudo docker stop $(sudo docker ps -aq)
+   91  sudo docker rm $(sudo docker ps -aq)
+   92  sudo docker images
+   93  history
+   94  clear
+   95  history | less
+   96  sudo shutdown now
+   97  cd AVR-2022/VMC/thermal/
+   98  ls
+   99  cd ..
+  100  cp -r thermal ~/
+  101  mv thermal thermal.back
+  102  mkdir thermal
+  103  cd thermal
+  104  ls
+  105  ls -ltrah ../thermal.back/
+  106  cp ../thermal.back/README.md ./
+  107  ls -ltrah ../thermal.back/
+  108  ls -ltrah
+  109  ls
+  110  vi Dockerfile 
+  111  cat requirements.txt 
+  112  ls
+  113  cd ..
+  114  ls
+  115  ls -ltrah
+  116  cd ../venv
+  117  cd thermal
+  118  python3 --version
+  119  python3 -m venv venv
+  120  sudo pt-get install python3-venv
+  121  sudo apt-get install python3-venv
+  122  python3 -m venv venv
+  123  source ./venv/bin/activate
+  124  pip install -r requirements.txt 
+  125  cd ..
+  126  cat README.md 
+  127  ls
+  128  cd scripts/
+  129  ls
+  130  ./setup.py 
+  131  cd ../thermal
+  132  ls
+  133  pip install bell-avr-libraries
+  134  cat Dockerfile 
+  135  cp ../thermal/Dockerfile ./
+  136  cat requirements.txt 
+  137  cd ..
+  138  ./start.py -l build thermal
+  139  exit
+  140  cd AVR-2022/
+  141  cd VMC
+  142  cd VMCls
+  143  cd AVR-2022/
+  144  cd VMC
+  145  ./start.py -l build thermal
+  146  ifconfig | grep 192
+  147  ls
+  148  cd AVR-2022/
+  149  cd ../
+  150  mkdir tmp
+  151  cd tmp
+  152  git clone https://github.com/avr-flyingrlabs/AVR-2022.gig
+  153  git clone https://github.com/avr-flyingrlabs/AVR-2022.git
+  154  ls
+  155  cp -r ~/AVR-2022/LICENSE ~/tmp/AVR-2022/
+  156  cp -r ~/AVR-2022/PX4 ~/tmp/AVR-2022/
+  157  cp -r ~/AVR-2022/VMC ~/tmp/AVR-2022/
+  158  cp -r ~/AVR-2022/scripts ~/tmp/AVR-2022/
+  159  cp -r ~/AVR-2022/package* ~/tmp/AVR-2022/
+  160  cp -r ~/AVR-2022/requirements.txt ~/tmp/AVR-2022/
+  161  cp -r ~/AVR-2022/PCC/ ~/tmp/AVR-2022/
+  162  cp -r ~/AVR-2022/pyproject.toml ~/tmp/AVR-2022/
+  163  cp -r ~/AVR-2022/README.md ~/tmp/AVR-2022/
+  164  cp -r ~/AVR-2022/.vscode/ ~/tmp/AVR-2022/
+  165  cp -r ~/AVR-2022/GUI ~/tmp/AVR-2022/
+  166  git status
+  167  cd AVR-2022/
+  168  git status
+  169  git add .
+  170  git commit -m "first"
+  171  git push
+  172  cd ../
+  173  mkdir backup
+  174  mv AVR-2022 backup/
+  175  cd ..
+  176  mv AVR-2022 ./tmp/backup/AVR-2022.orig
+  177  cp -r ~/tmp/backup/AVR-2022 ./
+  178  cd AVR-2022/
+  179  ls
+  180  git status
+  181  cat .git/config 
+  182  git config --global credential.helper cache
+  183  git status
+  184  git config credential.helper store
+  185  git status
+  186  cat ~/README.github 
+  187  history
+  188  history >> history-setup.txt
