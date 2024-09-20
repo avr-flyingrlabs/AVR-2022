@@ -1,0 +1,20 @@
+{
+    "recommendations": [
+        // general
+        "shardulm94.trailing-spaces",
+        // for Apriltags
+        "ms-vscode.cpptools",
+        "twxs.cmake",
+        // for Python
+        "ms-python.python",
+        "njqdev.vscode-python-typehint",
+        "sourcery.sourcery",
+        // for Docker/bash
+        "ms-azuretools.vscode-docker",
+        "foxundermoon.shell-format",
+        "timonwong.shellcheck",
+        // for GitHub
+        "GitHub.vscode-pull-request-github",
+        "cschleiden.vscode-github-actions",
+    ]
+}

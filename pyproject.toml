@@ -1,0 +1,12 @@
+[tool.autoflake]
+    recursive = true
+    in-place = true
+
+[tool.isort]
+    profile = "black"
+
+[tool.flake8]
+    # E501 is line too long
+    # E203 is whitespace before ':'
+    # W503 is line break before binary operator
+    ignore = "E501, E203, W503"
