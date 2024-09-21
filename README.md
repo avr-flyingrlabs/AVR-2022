@@ -92,4 +92,4 @@ You can now follow the instructions inside
 script and add `--dev` for development.
 
 Note, with `start.py` commands, make sure to add `--local` to the command.
-This builds the Docker images locally rather than using prebuilt ones from GitHub CR.
+This builds the Docker images locally rather than using prebuilt ones from GitHub CR..
