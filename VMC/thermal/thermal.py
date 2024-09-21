@@ -22,7 +22,7 @@ class ThermalModule(MQTTModule):
         self.amg = adafruit_mlx90640.MLX90640(i2c)
         #print("MLX addr detected on I2C")
         #print([hex(i) for i in self.amg.serial_number])
-        self.amg.refresh_rate = adafruit_mlx90640.RefreshRate.REFRESH_2_HZ
+        self.amg.refresh_rate = adafruit_mlx90640.RefreshRate.REFRESH_4_HZ
         logger.success("Connected to thermal camera!")
 
     def request_thermal_reading(self) -> None:
@@ -40,7 +40,10 @@ class ThermalModule(MQTTModule):
             for w in range(32):
                 pix = frame[h * 32 + w]
                 pixasint = round(pix)
-                bpix = pixasint.to_bytes(1, "big")
+                try:
+                    bpix = pixasint.to_bytes(1, "big")
+                except:
+                    bpix = 25
                 reading[i] = bpix[0]
                 i += 1
         base64_encoded = base64.b64encode(reading)
