@@ -32,75 +32,78 @@ class Direction(Enum):
 
 
 class ThermalView(QtWidgets.QWidget):
-    def __init__(self, parent: QtWidgets.QWidget) -> None:
+    def __init__(self, parent: QtWidgets.QWidget, input_x: int, input_y: int) -> None:
         super().__init__(parent)
 
-        # canvas size
-        self.width_ = 400
-        self.height_ = 300
-
-        # pixels within canvas
-        self.pixels_x = 32
-        self.pixels_y = 24
-        
-        # Define the upsampling factor
-        upsample_factor = 4  # Increase or decrease as needed
-
-        self.pixel_width = self.width_ / self.pixels_x  / upsample_factor
-        self.pixel_height = self.height_ / self.pixels_y /upsample_factor
 
         # low range of the sensor (this will be blue on the screen)
         self.MINTEMP = 20.0
 
         # high range of the sensor (this will be red on the screen)
         self.MAXTEMP = 32.0
-
+        
+        
         # last lowest temp from camera
         self.last_lowest_temp = 999.0
 
         # how many color values we can have
         self.COLORDEPTH = 1024
-
-        # how many pixels the camera is
-        self.camera_x = 32
-        self.camera_y = 24
-        self.camera_total = self.camera_x * self.camera_y
-
-        # create list of x/y points
-        self.points = [
-            (ix % self.camera_x, ix // self.camera_x)
-            for ix in range(self.camera_total)
-        ]
-
-
-
-        # Adjusted grid creation with higher resolution
-        self.grid_x, self.grid_y = np.mgrid[
-            0 : self.camera_x : (self.camera_x * upsample_factor) * 1j,
-            0 : self.camera_y : (self.camera_y * upsample_factor) * 1j,
-        ]
-
-
-        # create avaiable colors
+        
+         # create avaiable colors
         self.colors = [
             (int(c.red * 255), int(c.green * 255), int(c.blue * 255))
             for c in list(
                 colour.Color("indigo").range_to(colour.Color("red"), self.COLORDEPTH)
             )
         ]
+        
+        
+        # Dynamically set the camera size based on input
+        self.camera_x = input_x
+        self.camera_y = input_y
+        self.camera_total = self.camera_x * self.camera_y
 
-        # create canvas
-        layout = QtWidgets.QVBoxLayout()
-        self.setLayout(layout)
+        # canvas size based on the input dimensions
+        self.width_ =  400 #min(self.camera_x * 10, 400)  # or any other scaling logic
+        self.height_ = 300# min(self.camera_y * 10, 300)  # scale accordingly
 
+        # Dynamically calculate pixel sizes
+        self.pixel_width = self.width_ / self.camera_x / 15
+        self.pixel_height = self.height_ / self.camera_y /15
+
+        # Rest of the setup...
+        self.pixels_x = self.camera_x  # Matches camera dimensions
+        self.pixels_y = self.camera_y
+
+        # Create the points and grids dynamically based on the new camera size
+        self.points = [
+            (math.floor(ix / self.camera_x), (ix % self.camera_y))
+            for ix in range(self.camera_total)
+        ]
+        self.grid_x, self.grid_y = np.mgrid[
+            0: self.camera_x - 1: self.camera_total / 2j,
+            0: self.camera_y - 1: self.camera_total / 2j,
+        ]
+        
+        # self.grid_x, self.grid_y = np.mgrid[
+        #     0: self.camera_x - 1: complex(0, self.camera_x),
+        #     0: self.camera_y - 1: complex(0, self.camera_y)
+        # ]
+
+        # Set canvas and layout
         self.canvas = QtWidgets.QGraphicsScene()
         self.view = QtWidgets.QGraphicsView(self.canvas)
         self.view.setGeometry(0, 0, self.width_, self.height_)
+        print("width: ", self.width_)   
+        print("height: ", self.height_)
 
+        layout = QtWidgets.QVBoxLayout()
         layout.addWidget(self.view)
+        self.setLayout(layout)
 
-        # need a bit of padding for the edges of the canvas
+        # Adjust padding for the new canvas size
         self.setFixedSize(self.width_ + 50, self.height_ + 50)
+
 
     def set_temp_range(self, mintemp: float, maxtemp: float) -> None:
         self.MINTEMP = mintemp
@@ -109,9 +112,8 @@ class ThermalView(QtWidgets.QWidget):
     def set_calibrted_temp_range(self) -> None:
         self.MINTEMP = self.last_lowest_temp + 0.0
         self.MAXTEMP = self.last_lowest_temp + 15.0
-
-
-# Function to print the 24x32 grid
+        
+   # Function to print the 24x32 grid
     def print_grid_as_ascii(self,float_pixels, width, height):
         
 
@@ -139,18 +141,30 @@ class ThermalView(QtWidgets.QWidget):
             # Print the row
             print(row_str)
     
-    
+   
     def update_canvas(self, pixels: List[int]) -> None:
+        # print("updated_csnvas\n")
+
+        # self.print_grid_as_ascii(pixels, self.camera_x, self.camera_y)
+        # print("\n")
+        # print("\n")
+        
+
+
         float_pixels = [
             map_value(p, self.MINTEMP, self.MAXTEMP, 0, self.COLORDEPTH - 1)
             for p in pixels
         ]
+        
+        # print("print mapped float pixels\n")
+
+        # self.print_grid_as_ascii(float_pixels, self.camera_x, self.camera_y)
+
+        
 
         # Rotate 90° to orient for mounting correctly
         float_pixels_matrix = np.reshape(float_pixels, (self.camera_x, self.camera_y))
-        
-        #self.print_grid_as_ascii(float_pixels, self.camera_x, self.camera_y)
-        #float_pixels_matrix = np.rot90(float_pixels_matrix, 1)
+        float_pixels_matrix = np.rot90(float_pixels_matrix, 1)
         rotated_float_pixels = float_pixels_matrix.flatten()
 
         bicubic = scipy.interpolate.griddata(
@@ -159,17 +173,12 @@ class ThermalView(QtWidgets.QWidget):
             (self.grid_x, self.grid_y),
             method="cubic",
         )
-        
-        bicubic_rotated = np.rot90(bicubic)
 
         pen = QtGui.QPen(QtCore.Qt.PenStyle.NoPen)
         self.canvas.clear()
-        i = 0
-        for ix, row in enumerate(bicubic_rotated):
-            row_str = ""
-            i += 1
+
+        for ix, row in enumerate(bicubic):
             for jx, pixel in enumerate(row):
-                #row_str += f"{int(pixel):3} " # Convert to integer and make it 3 characters wide
                 brush = QtGui.QBrush(
                     QtGui.QColor(
                         *self.colors[int(constrain(pixel, 0, self.COLORDEPTH - 1))]
@@ -183,11 +192,6 @@ class ThermalView(QtWidgets.QWidget):
                     pen,
                     brush,
                 )
-            #row_str += "| " + str(i)
-
-            #print(row_str)
-
-
 
 
 class JoystickWidget(BaseTabWidget):
@@ -383,7 +387,13 @@ class ThermalViewControlWidget(BaseTabWidget):
         viewer_layout = QtWidgets.QVBoxLayout()
         viewer_groupbox.setLayout(viewer_layout)
 
-        self.viewer = ThermalView(self)
+        #self.viewer = ThermalView(self)
+        
+        camera_resolution = (32, 24)  # or from sensor API
+        self.viewer = ThermalView(self, *camera_resolution)
+
+
+
         viewer_layout.addWidget(self.viewer)
 
         # set temp range
