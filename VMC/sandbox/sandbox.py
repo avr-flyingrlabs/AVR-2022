@@ -4,12 +4,14 @@
 # and is receiving the proper payload as well.
 from bell.avr.mqtt.client import MQTTModule
 from bell.avr.mqtt.payloads import AvrFcmVelocityPayload
-
+from Jetson.GPIO import GPIO
 # This imports the third-party Loguru library which helps make logging way easier
 # and more useful.
 # https://loguru.readthedocs.io/en/stable/
 from loguru import logger
 
+pin1 = 11
+pin2 = 12
 
 # This creates a new class that will contain multiple functions
 # which are known as "methods". This inherits from the MQTTModule class
@@ -21,6 +23,10 @@ class Sandbox(MQTTModule):
     # argument that must be the first argument in any class method. This allows the code
     # inside the method to access class information.
     def __init__(self) -> None:
+	GPIO.setmode(GPIO.BOARD)
+	GPIO.setup(pin1, GPIO.OUT)
+	GPIO.output(pin2, 0)
+	self.LinearActuator()	
         # This calls the original `__init__()` method of the MQTTModule class.
         # This runs some setup code that we still want to occur, even though
         # we're replacing the `__init__()` method.
@@ -38,6 +44,18 @@ class Sandbox(MQTTModule):
     # This is what executes whenever a message is received on the "avr/fcm/velocity"
     # topic. The content of the message is passed to the `payload` argument.
     # The `AvrFcmVelocityMessage` class here is beyond the scope of AVR.
+
+    def LinearActuator(self, payload: AvrPcmStepperMovePayload) -> None:
+	while (true):
+	    direction = payload[direction]
+	    if direction == "U":
+		GPIO.output(pin1, GPIO.HIGH)
+		GPIO.output(pin2, GPIO.LOW)
+            if direction == "D":
+		GPIO.output(pin1, GPIO.LOW)
+		GPIO.output(pin2, GPIO.HIGH)
+
+
     def show_velocity(self, payload: AvrFcmVelocityPayload) -> None:
         vx = payload["vX"]
         vy = payload["vY"]
