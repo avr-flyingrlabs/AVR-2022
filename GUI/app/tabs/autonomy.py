@@ -1,16 +1,42 @@
 from __future__ import annotations
+from pynput import keyboard
 
 import functools
+import json
 from typing import List
 
 from bell.avr.mqtt.payloads import (
     AvrAutonomousBuildingDropPayload,
     AvrAutonomousEnablePayload,
+    AvrPcmSetServoAbsPayload,
+    #AvrPcmStepperMovePayload,
 )
 from PySide6 import QtCore, QtWidgets
 
 from ..lib.color import wrap_text
 from .base import BaseTabWidget
+import time
+
+halfstep_seq_frw = [
+         [1,0,0,0],
+         [1,1,0,0],
+         [0,1,0,0],
+         [0,1,1,0],
+         [0,0,1,0],
+         [0,0,1,1],
+         [0,0,0,1],
+         [1,0,0,1]
+    ]
+halfstep_seq_bck = [
+        [1,0,0,1],
+        [0,0,0,1],
+        [0,0,1,1],
+        [0,0,1,0],
+        [0,1,1,0],
+        [0,1,0,0],
+        [1,1,0,0],
+        [1,0,0,0]
+     ]
 
 
 class AutonomyWidget(BaseTabWidget):
@@ -18,6 +44,7 @@ class AutonomyWidget(BaseTabWidget):
         super().__init__(parent)
 
         self.setWindowTitle("Autonomy")
+
 
     def build(self) -> None:
         """
@@ -27,112 +54,180 @@ class AutonomyWidget(BaseTabWidget):
         self.setLayout(layout)
 
         # ==========================
-        # Autonomous mode
-        autonomous_groupbox = QtWidgets.QGroupBox("Autonomous")
-        autonomous_layout = QtWidgets.QHBoxLayout()
-        autonomous_groupbox.setLayout(autonomous_layout)
+        # Autonomous mode ha nope I murdered your code and turned it's ashes into a beautiful new creation that will destroy you on the feild of battle
 
-        autonomous_enable_button = QtWidgets.QPushButton("Enable")
-        autonomous_enable_button.clicked.connect(lambda: self.set_autonomous(True))  # type: ignore
-        autonomous_layout.addWidget(autonomous_enable_button)
 
-        autonomous_disable_button = QtWidgets.QPushButton("Disable")
-        autonomous_disable_button.clicked.connect(lambda: self.set_autonomous(False))  # type: ignore
-        autonomous_layout.addWidget(autonomous_disable_button)
+        LinearActuator_groupbox = QtWidgets.QGroupBox("LinearActuator")
+        LinearActuator_layout = QtWidgets.QVBoxLayout()
+        LinearActuator_groupbox.setLayout(LinearActuator_layout)
 
-        self.autonomous_label = QtWidgets.QLabel()
-        self.autonomous_label.setAlignment(
-            QtCore.Qt.AlignmentFlag.AlignRight | QtCore.Qt.AlignmentFlag.AlignVCenter
-        )
-        autonomous_layout.addWidget(self.autonomous_label)
+        Up_button = QtWidgets.QPushButton("Up")
+        LinearActuator_layout.addWidget(Up_button)
+        Up_button.clicked.connect(lambda: self.Up())
 
-        layout.addWidget(autonomous_groupbox, 0, 0, 1, 1)
+        Down_button = QtWidgets.QPushButton("Down")
+        LinearActuator_layout.addWidget(Down_button)
+        Down_button.clicked.connect(lambda: self.Down())
 
-        # ==========================
-        # Buildings
-        self.number_of_buildings = 6
-        self.building_labels: List[QtWidgets.QLabel] = []
+        Off_button = QtWidgets.QPushButton("Off")
+        LinearActuator_layout.addWidget(Off_button)
+        Off_button.clicked.connect(lambda: self.Off())
 
-        buildings_groupbox = QtWidgets.QGroupBox("Buildings")
-        buildings_layout = QtWidgets.QVBoxLayout()
-        buildings_groupbox.setLayout(buildings_layout)
+        layout.addWidget(LinearActuator_groupbox)
 
-        building_all_layout = QtWidgets.QHBoxLayout()
-
-        building_all_enable_button = QtWidgets.QPushButton("Enable All Drops")
-        building_all_enable_button.clicked.connect(lambda: self.set_building_all(True))  # type: ignore
-        building_all_layout.addWidget(building_all_enable_button)
-
-        building_all_disable_button = QtWidgets.QPushButton("Disable All Drops")
-        building_all_disable_button.clicked.connect(lambda: self.set_building_all(False))  # type: ignore
-        building_all_layout.addWidget(building_all_disable_button)
-
-        buildings_layout.addLayout(building_all_layout)
-
-        for i in range(self.number_of_buildings):
-            building_groupbox = QtWidgets.QGroupBox(f"Building {i}")
-            building_layout = QtWidgets.QHBoxLayout()
-            building_groupbox.setLayout(building_layout)
-
-            building_enable_button = QtWidgets.QPushButton("Enable Drop")
-            building_enable_button.clicked.connect(functools.partial(self.set_building, i, True))  # type: ignore
-            building_layout.addWidget(building_enable_button)
-
-            building_disable_button = QtWidgets.QPushButton("Disable Drop")
-            building_disable_button.clicked.connect(functools.partial(self.set_building, i, False))  # type: ignore
-            building_layout.addWidget(building_disable_button)
-
-            building_label = QtWidgets.QLabel()
-            building_label.setAlignment(
-                QtCore.Qt.AlignmentFlag.AlignRight
-                | QtCore.Qt.AlignmentFlag.AlignVCenter
-            )
-            building_layout.addWidget(building_label)
-            self.building_labels.append(building_label)
-
-            buildings_layout.addWidget(building_groupbox)
-
-        layout.addWidget(buildings_groupbox, 1, 0, 4, 1)
-
-    def set_building(self, number: int, state: bool) -> None:
-        # sourcery skip: assign-if-exp
         """
-        Set a building state
+        Sucker_groupbox = QtWidgets.QGroupBox("Sucker")
+        Sucker_layout = QtWidgets.QVBoxLayout()
+        Sucker_groupbox.setLayout(Sucker_layout)
+
+        Suck_button = QtWidgets.QPushButton("Suck")
+        Sucker_layout.addWidget(Suck_button)
+
+        Suck_button.clicked.connect(lambda: self.Suck())
+
+        Off_button = QtWidgets.QPushButton("Off")
+        Sucker_layout.addWidget(Off_button)
+
+        Off_button.clicked.connect(lambda: self.Off())
+
+        Spit_button = QtWidgets.QPushButton("Spit")
+        Sucker_layout.addWidget(Spit_button)
+
+        Spit_button.clicked.connect(lambda: self.Spit())
+
+        arm_button = QtWidgets.QPushButton("arm")
+        Sucker_layout.addWidget(arm_button)
+
+        arm_button.clicked.connect(lambda: self.arm())
+
+        layout.addWidget(Sucker_groupbox)
+        """
+
+    """
+    def on_press(self, key):  # sourcery skip
+        try:
+            k = key.char  # single-char keys
+            if k == "q":
+                self.set_servo_pos(1, 1000)
+            elif k == "w":
+                self.set_servo_pos(1, 1125)
+            elif k == "e":
+                self.set_servo_pos(1, 1250)
+            elif k == "r":
+                self.set_servo_pos(1, 1375)
+            elif k == "o":
+                self.set_servo_pos(2, 2000)
+            elif k == "p":
+                self.set_servo_pos(2, 1000)
+        except Exception:
+            pass #need something here for a try except statemet
+
+   """
+
+    def Up (self) -> None:
+        data = {"command":"U"}
+        json_data = json.dumps(data, indent=4)
+        self.send_message(
+            "avr/pcm/stepper/linearactuator",
+            data
+            #AvrPcmStepperMovePayload(steps=0,direction="U")
+        )
+
+    def Down (self) -> None:
+        data = {"command":"D"}
+        self.send_message(
+            "avr/pcm/stepper/linearactuator",
+            data
+            #AvrPcmStepperMovePayload(steps=0,direction="U")
+        )
+
+    def Off (self) -> None:
+        data = {"command":"O"}
+        self.send_message(
+            "avr/pcm/stepper/linearactuator",
+            data
+            #AvrPcmStepperMovePayload(steps=0,direction="U")
+        )
+
+    def Suck (self) -> None:
+        self.set_servo_pos(1,1000)
         """
         self.send_message(
-            "avr/autonomous/building/drop",
-            AvrAutonomousBuildingDropPayload(id=number, enabled=state),
+            "avr/pcm/stepper/move",
+            AvrPcmStepperMovePayload(steps=0,direction="U")
         )
-
-        if state:
-            text = "Drop Enabled"
-            color = "green"
-        else:
-            text = "Drop Disabled"
-            color = "red"
-
-        self.building_labels[number].setText(wrap_text(text, color))
-
-    def set_building_all(self, state: bool) -> None:
+        print ("sending mesage")
         """
-        Set all building states at once
-        """
-        for i in range(self.number_of_buildings):
-            self.set_building(i, state)
 
-    def set_autonomous(self, state: bool) -> None:
-        """
-        Set autonomous mode
+    def Spit (self) -> None:
+        self.set_servo_pos(1,2000)
         """
         self.send_message(
-            "avr/autonomous/enable", AvrAutonomousEnablePayload(enabled=state)
+            "avr/pcm/stepper/move",
+            AvrPcmStepperMovePayload(steps=0,direction="D")
+        )
+        """
+    # def Off (self) -> None:
+        # self.set_servo_pos(3,0)
+        """
+        self.send_message(
+            "avr/pcm/stepper/move",
+            AvrPcmStepperMovePayload(steps=0,direction="O")
+        )
+        print ("stopping sending mesage")
+        """
+
+    def set_servo_pos(self, number: int, position: int) -> None:
+        """
+        Set a servo state
+        """
+        self.send_message(
+            "avr/pcm/set_servo_abs",
+            AvrPcmSetServoAbsPayload(servo=number, absolute=position),
         )
 
-        if state:
-            text = "Autonomous Enabled"
-            color = "green"
-        else:
-            text = "Autonomous Disabled"
-            color = "red"
+    def arm (self) -> None:
+        self.set_servo_pos(3,2000)
 
-        self.autonomous_label.setText(wrap_text(text, color))
+
+
+
+
+"""
+servo contol example
+def on_press(self, key):  # sourcery skip
+        try:
+            #dont judge the if else list because its dogshit code
+            #why the fuck did I not make this a switch MAKE IT A SWITCH DUMBASS
+            k = key.char  # single-char keys
+            if k == "q":  #seal
+                self.set_servo_pos(1, 2000)
+            elif k == "w": #open
+                self.set_servo_pos(1, 400) #400????????
+            elif k == "y": #swing arm
+                self.set_servo_pos(4, 800)
+            elif k == "u": #swing arm halfway to mid
+                self.set_servo_pos(4, 1000)
+            elif k == "i": #swing arm to middle
+                self.set_servo_pos(4, 1400)
+            elif k == "o": #swing arm halfway to end
+                self.set_servo_pos(4, 1600)
+            elif k == "p": #swing arm to end
+                self.set_servo_pos(4, 1800)
+            #fan pwm outputs
+            elif k == "0":
+                self.set_servo_pos(0, 1000)
+            elif k == "1":
+                self.set_servo_pos(0, 1200)
+            elif k == "2":
+                self.set_servo_pos(0, 1400)
+            elif k == "3":
+                self.set_servo_pos(0, 1600)
+            elif k == "4":
+                self.set_servo_pos(0, 1800)
+            elif k == "5":
+                self.set_servo_pos(0, 2000)
+        except Exception:
+            pass #need something here for a try except statemet
+            """
+
