@@ -3,8 +3,9 @@
 # It also helps us make sure that our code is sending the proper payload on a topic
 # and is receiving the proper payload as well.
 from bell.avr.mqtt.client import MQTTModule
-from bell.avr.mqtt.payloads import AvrFcmVelocityPayload
-from Jetson.GPIO import GPIO
+# from bell.avr.mqtt.payloads import AvrFcmVelocityPayload
+import Jetson.GPIO as GPIO
+import json
 # This imports the third-party Loguru library which helps make logging way easier
 # and more useful.
 # https://loguru.readthedocs.io/en/stable/
@@ -23,14 +24,17 @@ class Sandbox(MQTTModule):
     # argument that must be the first argument in any class method. This allows the code
     # inside the method to access class information.
     def __init__(self) -> None:
-	GPIO.setmode(GPIO.BOARD)
-	GPIO.setup(pin1, GPIO.OUT)
-	GPIO.output(pin2, 0)
-	self.LinearActuator()	
+        # GPIO.setmode(GPIO.BOARD)
+        # GPIO.setup(pin1, GPIO.OUT)
+        # GPIO.output(pin2, 0)
+        # self.LinearActuator()	
         # This calls the original `__init__()` method of the MQTTModule class.
         # This runs some setup code that we still want to occur, even though
         # we're replacing the `__init__()` method.
         super().__init__()
+        GPIO.setmode(GPIO.BOARD)
+        GPIO.setup(pin1, GPIO.OUT)
+        GPIO.setup(pin2, GPIO.OUT)
         # Here, we're creating a dictionary of MQTT topic names to method handles.
         # A dictionary is a data structure that allows use to
         # obtain values based on keys. Think of a dictionary of state names as keys
@@ -38,29 +42,32 @@ class Sandbox(MQTTModule):
         # find the associated capital. However, this does not work in reverse. So here,
         # we're creating a dictionary of MQTT topics, and the methods we want to run
         # whenever a message arrives on that topic.
-        self.topic_map = {"avr/fcm/velocity": self.show_velocity}
+        self.topic_map = {"avr/pcm/stepper/linearactuator": self.LinearActuator}
 
     # Here's an example of a custom message handler here.
     # This is what executes whenever a message is received on the "avr/fcm/velocity"
     # topic. The content of the message is passed to the `payload` argument.
     # The `AvrFcmVelocityMessage` class here is beyond the scope of AVR.
 
-    def LinearActuator(self, payload: AvrPcmStepperMovePayload) -> None:
-	while (true):
-	    direction = payload[direction]
-	    if direction == "U":
-		GPIO.output(pin1, GPIO.HIGH)
-		GPIO.output(pin2, GPIO.LOW)
-            if direction == "D":
-		GPIO.output(pin1, GPIO.LOW)
-		GPIO.output(pin2, GPIO.HIGH)
+    def LinearActuator(self, payload) -> None:
+        logger.debug(f"payload: "+str(payload))
+        direction = payload["command"]            
+        if direction == "D":
+            GPIO.output(pin1, GPIO.HIGH)
+            GPIO.output(pin2, GPIO.LOW)
+        if direction == "U":
+            GPIO.output(pin1, GPIO.LOW)
+            GPIO.output(pin2, GPIO.HIGH)
 
-
-    def show_velocity(self, payload: AvrFcmVelocityPayload) -> None:
-        vx = payload["vX"]
-        vy = payload["vY"]
-        vz = payload["vZ"]
-        v_ms = (vx, vy, vz)
+        if direction == "O":
+            GPIO.output(pin1, GPIO.LOW)
+            GPIO.output(pin2, GPIO.LOW)
+		        
+    # def show_velocity(self, payload: AvrFcmVelocityPayload) -> None:
+    #     vx = payload["vX"]
+    #     vy = payload["vY"]
+    #     vz = payload["vZ"]
+    #     v_ms = (vx, vy, vz)
 
         # Use methods like `debug`, `info`, `success`, `warning`, `error`, and
         # `critical` to log data that you can see while your code runs.
@@ -68,8 +75,15 @@ class Sandbox(MQTTModule):
         # This is what is known as a "f-string". This allows you to easily inject
         # variables into a string without needing to combine lots of strings together.
         # https://realpython.com/python-f-strings/#f-strings-a-new-and-improved-way-to-format-strings-in-python
-        logger.debug(f"Velocity information: {v_ms} m/s")
+        # logger.debug(f"Velocity information: {v_ms} m/s")
+    def mymove(self,payload) -> None:
+        logger.debug(f"Hello!=")
+        logger.debug(f"Hello: {payload}")
+        print("hello")
+        print(payload)
 
+        jerry=json.loads(str(payload))
+        logger.debug(f"value: {jerry['Miky']}")
     # Here is an example on how to publish a message to an MQTT topic to
     # perform an action
     def open_servo(self) -> None:

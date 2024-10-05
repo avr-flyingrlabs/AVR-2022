@@ -146,6 +146,7 @@ def pcm_service(compose_services: dict, local: bool = False) -> None:
 def sandbox_service(compose_services: dict) -> None:
     sandbox_data = {
         "depends_on": ["mqtt"],
+        "privileged": True,
         "build": os.path.join(THIS_DIR, "sandbox"),
         "restart": "unless-stopped",
     }
