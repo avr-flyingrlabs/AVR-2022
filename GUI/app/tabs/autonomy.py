@@ -75,6 +75,19 @@ class AutonomyWidget(BaseTabWidget):
 
         layout.addWidget(LinearActuator_groupbox)
 
+        Servo_groupbox = QtWidgets.QGroupBox("Servo")
+        Servo_layout = QtWidgets.QVBoxLayout()
+        Servo_groupbox.setLayout(Servo_layout)
+
+        Enable_Servo_button = QtWidgets.QPushButton("Enable")
+        Servo_layout.addWidget(Enable_Servo_button)
+        Enable_Servo_button.clicked.connect(lambda: self.Enable_Servo())
+
+        Disable_Servo_button = QtWidgets.QPushButton("Disable")
+        Servo_layout.addWidget(Disable_Servo_button)
+        Disable_Servo_button.clicked.connect(lambda: self.Disable_Servo())
+
+
         """
         Sucker_groupbox = QtWidgets.QGroupBox("Sucker")
         Sucker_layout = QtWidgets.QVBoxLayout()
@@ -140,6 +153,16 @@ class AutonomyWidget(BaseTabWidget):
             data
             #AvrPcmStepperMovePayload(steps=0,direction="U")
         )
+
+    def Enable_Servo (self) -> None:
+        self.set_servo_pos(1,1000)
+        time.sleep(1)
+        self.set_servo_pos(1,2000)
+        time.sleep(1)
+        self.set_servo_pos(1,1500)
+
+    def Disable_Servo (self) -> None:
+        self.set_servo_pos (1,1500)
 
     def Off (self) -> None:
         data = {"command":"O"}
