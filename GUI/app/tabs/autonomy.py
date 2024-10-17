@@ -83,9 +83,19 @@ class AutonomyWidget(BaseTabWidget):
         Servo_layout.addWidget(Enable_Servo_button)
         Enable_Servo_button.clicked.connect(lambda: self.Enable_Servo())
 
+        Calibrate_Up_Servo_button = QtWidgets.QPushButton("Calibrate Up")
+        Servo_layout.addWidget(Calibrate_Up_Servo_button)
+        Calibrate_Up_Servo_button.clicked.connect(lambda: self.Calibrate_Up_Servo_button())
+
+        Calibrate_Down_Servo_button = QtWidgets.QPushButton("Calibrate Down")
+        Servo_layout.addWidget(Calibrate_Down_Servo_button)
+        Calibrate_Down_Servo_button.clicked.connect(lambda: self.Calibrate_Down_Servo_button())
+
         Disable_Servo_button = QtWidgets.QPushButton("Disable")
         Servo_layout.addWidget(Disable_Servo_button)
         Disable_Servo_button.clicked.connect(lambda: self.Disable_Servo())
+
+        layout.addWidget(Servo_groupbox)
 
 
         """
@@ -155,14 +165,31 @@ class AutonomyWidget(BaseTabWidget):
         )
 
     def Enable_Servo (self) -> None:
-        self.set_servo_pos(1,1000)
-        time.sleep(1)
+        # for a in range(20):
+        #     self.set_servo_pos(1, a*100)
+        #     time.sleep(.5)
+        for a in range(20):
+            self.set_servo_pos(1,2200)
+            time.sleep(5)
+            self.set_servo_pos(1,400)
+            time.sleep(4.5)
+
+        # self.set_servo_pos(1,2200)
+        # time.sleep(5)
+        # self.set_servo_pos(1,400)
+        # time.sleep(5)
+        # self.set_servo_pos(1,1400)
+
+    def Calibrate_Up_Servo_button (self) -> None:
         self.set_servo_pos(1,2000)
-        time.sleep(1)
-        self.set_servo_pos(1,1500)
+
+
+    def Calibrate_Down_Servo_button (self) -> None:
+        self.set_servo_pos(1,900)
+
 
     def Disable_Servo (self) -> None:
-        self.set_servo_pos (1,1500)
+        self.set_servo_pos (1,1400)
 
     def Off (self) -> None:
         data = {"command":"O"}
