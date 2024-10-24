@@ -4,11 +4,13 @@ from pynput import keyboard
 import functools
 import json
 from typing import List
+from typing import List, Optional, Tuple
 
 from bell.avr.mqtt.payloads import (
     AvrAutonomousBuildingDropPayload,
     AvrAutonomousEnablePayload,
     AvrPcmSetServoAbsPayload,
+    AvrPcmSetBaseColorPayload,
     #AvrPcmStepperMovePayload,
 )
 from PySide6 import QtCore, QtWidgets
@@ -95,7 +97,39 @@ class AutonomyWidget(BaseTabWidget):
         Servo_layout.addWidget(Disable_Servo_button)
         Disable_Servo_button.clicked.connect(lambda: self.Disable_Servo())
 
-        layout.addWidget(Servo_groupbox)
+        # layout.addWidget(Servo_groupbox)
+
+        led_groupbox = QtWidgets.QGroupBox("LEDs")
+        led_layout = QtWidgets.QVBoxLayout()
+        led_groupbox.setLayout(led_layout)
+
+        red_led_button = QtWidgets.QPushButton("Red")
+        red_led_button.setStyleSheet("background-color: red")
+        red_led_button.clicked.connect(lambda: self.set_led((255, 255, 0, 0)))  # type: ignore
+        led_layout.addWidget(red_led_button)
+
+        green_led_button = QtWidgets.QPushButton("Yellow")
+        green_led_button.setStyleSheet("background-color: yellow")
+        green_led_button.clicked.connect(lambda: self.set_led((0, 255, 255, 0)))  # type: ignore
+        led_layout.addWidget(green_led_button)
+
+        blue_led_button = QtWidgets.QPushButton("Blue")
+        blue_led_button.setStyleSheet("background-color: blue; color: white")
+        blue_led_button.clicked.connect(lambda: self.set_led((255, 0, 0, 255)))  # type: ignore
+        led_layout.addWidget(blue_led_button)
+
+        clear_led_button = QtWidgets.QPushButton("Clear")
+        clear_led_button.setStyleSheet("background-color: white")
+        clear_led_button.clicked.connect(lambda: self.set_led((0, 0, 0, 0)))  # type: ignore
+        led_layout.addWidget(clear_led_button)
+
+        # bach_led_button = QtWidgets.QPushButton("Bach")
+        # bach_led_button.setStyleSheet("background-color: white")
+        # bach_led_button.clicked.connect(lambda: self.Bach())  # type: ignore
+        # led_layout.addWidget(bach_led_button)
+
+        layout.addWidget(led_groupbox)
+
 
 
         """
@@ -166,19 +200,19 @@ class AutonomyWidget(BaseTabWidget):
 
     def Enable_Servo (self) -> None:
         # for a in range(20):
-        #     self.set_servo_pos(1, a*100)
+        #     self.set_servo_pos(1, a*100) #testing
         #     time.sleep(.5)
-        for a in range(20):
-            self.set_servo_pos(1,2200)
-            time.sleep(5)
-            self.set_servo_pos(1,400)
-            time.sleep(4.5)
+        # for a in range(20):
+        #     self.set_servo_pos(1,2200)
+        #     time.sleep(5)
+        #     self.set_servo_pos(1,400)
+        #     time.sleep(4.5)
 
-        # self.set_servo_pos(1,2200)
-        # time.sleep(5)
-        # self.set_servo_pos(1,400)
-        # time.sleep(5)
-        # self.set_servo_pos(1,1400)
+        self.set_servo_pos(1,2200)
+        time.sleep(5)
+        self.set_servo_pos(1,400)
+        time.sleep(5)
+        self.set_servo_pos(1,1400)
 
     def Calibrate_Up_Servo_button (self) -> None:
         self.set_servo_pos(1,2000)
@@ -238,6 +272,32 @@ class AutonomyWidget(BaseTabWidget):
 
     def arm (self) -> None:
         self.set_servo_pos(3,2000)
+
+
+
+
+    def on_press(self, key):  # sourcery skip
+        try:
+            #dont judge the if else list because its dogshit code
+            #why the fuck did I not make this a switch MAKE IT A SWITCH DUMBASS
+            k = key.char  # single-char keys
+            if k == "w":  #seal
+                self.Up()
+            elif k == "s": #open
+                self.Down()
+
+        except:
+            pass
+
+    def set_led(self, color: Tuple[int, int, int, int]) -> None:
+        """
+        Set LED color
+        """
+        self.send_message(
+            "avr/pcm/set_base_color", AvrPcmSetBaseColorPayload(wrgb=color)
+        )
+
+
 
 
 

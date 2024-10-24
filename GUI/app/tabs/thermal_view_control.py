@@ -3,6 +3,7 @@ import json
 import math
 from enum import Enum, auto
 from typing import List, Optional, Tuple
+import time
 
 import colour
 import numpy as np
@@ -13,6 +14,7 @@ from bell.avr.mqtt.payloads import (
     AvrPcmSetLaserOnPayload,
     AvrPcmSetServoAbsPayload,
     AvrPcmSetServoPctPayload,
+    AvrPcmSetBaseColorPayload,
 )
 from bell.avr.utils.timing import rate_limit
 from PySide6 import QtCore, QtGui, QtWidgets
@@ -130,16 +132,15 @@ class ThermalView(QtWidgets.QWidget):
 
             # Convert each number in the row to an integer and prepare it for printing
             row_str = ""
-        
+
             for number in row_pixels:
-                
+
                 row_str += f"{int(number):3} " # Convert to integer and make it 3 characters wide
             row_str += "| " + str(i)
 
             # Print the row
             print(row_str)
-    
-    
+
     def update_canvas(self, pixels: List[int]) -> None:
         float_pixels = [
             map_value(p, self.MINTEMP, self.MAXTEMP, 0, self.COLORDEPTH - 1)
@@ -148,7 +149,7 @@ class ThermalView(QtWidgets.QWidget):
 
         # Rotate 90° to orient for mounting correctly
         float_pixels_matrix = np.reshape(float_pixels, (self.camera_x, self.camera_y))
-        
+
         #self.print_grid_as_ascii(float_pixels, self.camera_x, self.camera_y)
         #float_pixels_matrix = np.rot90(float_pixels_matrix, 1)
         rotated_float_pixels = float_pixels_matrix.flatten()
@@ -159,7 +160,7 @@ class ThermalView(QtWidgets.QWidget):
             (self.grid_x, self.grid_y),
             method="cubic",
         )
-        
+
         bicubic_rotated = np.rot90(bicubic)
 
         pen = QtGui.QPen(QtCore.Qt.PenStyle.NoPen)
@@ -422,6 +423,34 @@ class ThermalViewControlWidget(BaseTabWidget):
 
         layout_splitter.addWidget(viewer_groupbox)
 
+        # ==========================
+        # LEDs
+        led_groupbox = QtWidgets.QGroupBox("LEDs")
+        led_layout = QtWidgets.QVBoxLayout()
+        led_groupbox.setLayout(led_layout)
+
+        red_led_button = QtWidgets.QPushButton("Red")
+        red_led_button.setStyleSheet("background-color: red")
+        red_led_button.clicked.connect(lambda: self.set_led((255, 255, 0, 0)))  # type: ignore
+        led_layout.addWidget(red_led_button)
+
+        green_led_button = QtWidgets.QPushButton("Yellow")
+        green_led_button.setStyleSheet("background-color: yellow")
+        green_led_button.clicked.connect(lambda: self.set_led((0, 255, 255, 0)))  # type: ignore
+        led_layout.addWidget(green_led_button)
+
+        blue_led_button = QtWidgets.QPushButton("Blue")
+        blue_led_button.setStyleSheet("background-color: blue; color: white")
+        blue_led_button.clicked.connect(lambda: self.set_led((255, 0, 0, 255)))  # type: ignore
+        led_layout.addWidget(blue_led_button)
+
+        clear_led_button = QtWidgets.QPushButton("Clear")
+        clear_led_button.setStyleSheet("background-color: white")
+        clear_led_button.clicked.connect(lambda: self.set_led((0, 0, 0, 0)))  # type: ignore
+        led_layout.addWidget(clear_led_button)
+
+        layout.addWidget(led_groupbox)
+
         # joystick
         joystick_groupbox = QtWidgets.QGroupBox("Joystick")
         joystick_layout = QtWidgets.QVBoxLayout()
@@ -433,8 +462,9 @@ class ThermalViewControlWidget(BaseTabWidget):
         self.joystick = JoystickWidget(self)
         sub_joystick_layout.addWidget(self.joystick)
 
-        fire_laser_button = QtWidgets.QPushButton("Fire Laser")
-        joystick_layout.addWidget(fire_laser_button)
+        Thermal_sense_button = QtWidgets.QPushButton("Heat Reading?")
+        joystick_layout.addWidget(Thermal_sense_button)
+        Thermal_sense_button.clicked.connect(lambda: self.FlashWhite())
 
         laser_toggle_layout = QtWidgets.QHBoxLayout()
 
@@ -463,10 +493,6 @@ class ThermalViewControlWidget(BaseTabWidget):
         # connect signals
         self.joystick.emit_message.connect(self.emit_message.emit)
 
-        fire_laser_button.clicked.connect(  # type: ignore
-            lambda: self.send_message("avr/pcm/fire_laser", AvrPcmFireLaserPayload())
-        )
-
         laser_on_button.clicked.connect(lambda: self.set_laser(True))  # type: ignore
         laser_off_button.clicked.connect(lambda: self.set_laser(False))  # type: ignore
 
@@ -474,6 +500,11 @@ class ThermalViewControlWidget(BaseTabWidget):
 
         # don't allow us to shrink below size hint
         self.setMinimumSize(self.sizeHint())
+
+    def FlashWhite(self):
+        self.set_led((255,255,255,255))
+        time.sleep(.5)
+        self.set_led((0,0,0,0))
 
     def inverted_checkbox_clicked(self) -> None:
         """
@@ -526,3 +557,11 @@ class ThermalViewControlWidget(BaseTabWidget):
 
     def clear(self) -> None:
         self.viewer.canvas.clear()
+
+    def set_led(self, color: Tuple[int, int, int, int]) -> None:
+        """
+        Set LED color
+        """
+        self.send_message(
+            "avr/pcm/set_base_color", AvrPcmSetBaseColorPayload(wrgb=color)
+        )
